@@ -77,23 +77,27 @@ function onFileLoaded(e) {
 
     var tex = new Texture(gl, file.getWidth(), file.getHeight(), pixels);
 
-    draw3d(tex, false);
+    draw3d(gl, pixels, file.getWidth(), file.getHeight());
     draw2d(pixels, file.getWidth(), file.getHeight());
 }
 
 function draw2d(gl, pixels, srcSize, dstSize) {
     var img = new Float32Array(dstSize * dstSize * 4);
+    var uSampler = new js2glsl.Sampler2D(pixels, srcSize, srcSize); 
+    uSampler.flipY = true; 
+
     shader.setUniforms({
-        uSampler: [pixels, srcSize, srcSize],
+        uSampler: uSampler,
         sourceSize: srcSize,
         destinationSize: dstSize,
         tileCount: 3.0,
         skipCount: 2.0
     });
+
     var varyings = {};
     for (var y = 0; y < dstSize; y++) {
         for (var x = 0; x < dstSize; x++) {
-            varyings.vTextureCoord = [x / dstSize, y / dstSize];
+            varyings.vTextureCoord = [x / dstSize + 1/(2*dstSize), y / dstSize + 1/(2*dstSize)];
             shader.setVaryings(varyings);
             var rgba = shader.FragmentColor(js2glsl.builtIns);
             var idx = y * dstSize * 4 + x * 4;
